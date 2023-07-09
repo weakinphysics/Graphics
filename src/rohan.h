@@ -3,10 +3,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-
+#include <assert.h>
+#include <stdbool.h>
+#include <math.h>
 
 #define COLOR_RANGE 255
 #define PIXEL_AT(m, i, j) (m)[(i) * ((m).stride) + (j)]
+
+
+void make_ppm_header(FILE* fp, int width, int height);
+void olivec_fill(uint32_t *pixels, size_t width, size_t height, uint32_t color);
+void fill_rectangle(uint32_t *pixels, int width, int height, int centerX, int centerY, int fullWidth, int fullHeight, uint32_t color);
+void fill_circle(uint32_t *pixels, int cx, int cy, double radius, int fullWidth, int fullHeight, uint32_t color);
+void fill_checkered_pattern(uint32_t *pixels, int boxCountH, int boxCountV, int centerX, int centerY, int width, int height, int fullWidth, int fullHeight, uint32_t color1, uint32_t color2);
+int terminateFileWrite(FILE* fp, int status);
+int olivec_save(uint32_t *pixels, int width, int height, const char* filePath);
+
 
 void make_ppm_header(FILE* fp, int width, int height){
     fprintf(fp, "P6\n");
@@ -18,6 +30,97 @@ void olivec_fill(uint32_t *pixels, size_t width, size_t height, uint32_t color){
         pixels[i] = color; 
     }
 }
+
+void fill_rectangle(uint32_t *pixels, int width, int height, int centerX, int centerY, int fullWidth, int fullHeight, uint32_t color){
+    assert((centerX - width/2 >= 0) && (centerX + ceil(width/2.0) - 1 < fullWidth));
+    assert((centerY - height/2 >= 0) && (centerY + ceil(height/2.0) - 1 < fullHeight));
+    int start_X = centerX - width/2;
+    int start_Y = centerY - height/2;
+    for(int dy = 0; dy < height; dy++){
+        for(int dx = 0; dx < width; dx++){
+            pixels[(start_Y + dy)*fullWidth + start_X + dx] = color;
+        }
+    } 
+    return;
+}
+
+
+
+void fill_circle(uint32_t *pixels, int cx, int cy, double radius, int fullWidth, int fullHeight, uint32_t color){
+    fill_rectangle(pixels, 2*radius , 2*radius , cx, cy, fullWidth, fullHeight, 0xFF000000);
+    int start_X = cx - radius;
+
+    int start_Y = cy - radius;
+
+    //apply circular mask
+    for(int dy = start_Y; dy < start_Y + 2*radius; dy++){
+        for(int dx = start_X; dx < start_X + 2*radius; dx++){
+            if(radius*radius >= (dx - cx)*(dx - cx) + (dy - cy)*(dy - cy)){
+                // printf("%d %d\n", dx, dy);
+                pixels[dy*fullWidth + dx] = color;
+            }
+        }
+    }
+    return;
+}
+
+void fill_checkered_pattern(uint32_t *pixels, int boxCountH, int boxCountV, int centerX, int centerY, int width, int height, int fullWidth, int fullHeight, uint32_t color1, uint32_t color2){
+    assert((centerX - width/2) >= 0 && (centerX + ceil(width/2.0) - 1 < fullWidth));
+    assert(centerY - height/2 >= 0 && (centerY  + ceil(height/2.0) - 1 < fullHeight));
+    int containerStart_X = centerX - width/2;
+    int containerStart_Y = centerY - height/2;
+    int individualBoxWidth = width/boxCountH;
+    int individualBoxHeight = height/boxCountV;
+    fill_rectangle(pixels, width, height, centerX, centerY, fullWidth, fullHeight, 0xFFFFFFFF);
+    int cx,cy;
+    uint32_t color;
+    for(int i = 0; i < boxCountV; i++){
+        for(int j = 0; j < boxCountH; j++){
+            if((i^j)&1) color = color1;
+            else color = color2;
+            cx =  containerStart_X + j*individualBoxWidth + (individualBoxWidth/2);
+            cy =  containerStart_Y + i*individualBoxHeight + (individualBoxHeight/2);
+            fill_rectangle(pixels, individualBoxWidth, individualBoxHeight, cx, cy, fullWidth, fullHeight, color);
+        }
+    }
+}
+
+void perform_linear_interpolation(double a, double b, double resolution, double* values, bool includeLast){
+    int listSize = (b-a)/resolution;
+    int i = 0;
+    while(i < listSize){
+        values[i] = a;
+        i++;
+        a += resolution;
+    }
+    return;
+}
+
+void  fill_circular_grid(uint32_t *pixels, int gridCenterX, int gridCenterY, int containerEdgeLength, int minRadius, int maxRadius, int fullWidth, int fullHeight, uint32_t color){
+    //much like fill_checkered_pattern we merely need to ascertain the circle centers and then we may call the fill_circle method from each center;
+    int boxCount = 5*5;
+    double resolution = (maxRadius - minRadius)/((double)boxCount);
+    //the container in this case is a square
+    assert((gridCenterX - containerEdgeLength/2) >= 0 && (gridCenterX + ceil(containerEdgeLength/2.0) - 1 < fullWidth));
+    assert((gridCenterY - containerEdgeLength/2 >= 0) && (gridCenterY + ceil(containerEdgeLength/2.0) - 1 < fullHeight));
+    int individualBoxEdge = containerEdgeLength/5;
+    fill_rectangle(pixels, containerEdgeLength, containerEdgeLength, gridCenterX, gridCenterY, fullWidth, fullHeight, 0xFF000000);
+    int containerStartX = gridCenterX - containerEdgeLength/2;
+    int containerStartY = gridCenterY - containerEdgeLength/2;
+    double radiusValues[boxCount];
+    perform_linear_interpolation((double)minRadius, (double)maxRadius, resolution, radiusValues, false);
+    
+    for(int i = 0; i < 5; i++){
+        for(int j = 0; j < 5; j++){
+            int cx = containerStartX + j*individualBoxEdge + individualBoxEdge/2;
+            int cy = containerStartY + i*individualBoxEdge + individualBoxEdge/2;
+            fill_circle(pixels, cx, cy, radiusValues[i*5 + j], fullWidth, fullHeight, color);
+        }
+    }
+    return;
+}
+
+
 
 
 int terminateFileWrite(FILE* fp, int status){
@@ -51,4 +154,6 @@ int olivec_save(uint32_t *pixels, int width, int height, const char* filePath){
     }
     return terminateFileWrite(filePointer, 1);
 }
+
+
 
