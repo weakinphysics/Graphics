@@ -1,3 +1,3 @@
 #!/bin/sh
 
-gcc -Wall -Wextra main.c -o main -lm
+gcc -Wall -Wextra -g main.c -o main -lm

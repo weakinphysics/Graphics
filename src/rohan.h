@@ -16,6 +16,7 @@ void olivec_fill(uint32_t *pixels, size_t width, size_t height, uint32_t color);
 void fill_rectangle(uint32_t *pixels, int width, int height, int centerX, int centerY, int fullWidth, int fullHeight, uint32_t color);
 void fill_circle(uint32_t *pixels, int cx, int cy, double radius, int fullWidth, int fullHeight, uint32_t color);
 void fill_checkered_pattern(uint32_t *pixels, int boxCountH, int boxCountV, int centerX, int centerY, int width, int height, int fullWidth, int fullHeight, uint32_t color1, uint32_t color2);
+void  fill_circular_grid(uint32_t *pixels, int gridCenterX, int gridCenterY, int containerEdgeLength, int minRadius, int maxRadius, int fullWidth, int fullHeight, uint32_t color);
 int terminateFileWrite(FILE* fp, int status);
 int olivec_save(uint32_t *pixels, int width, int height, const char* filePath);
 
@@ -23,6 +24,12 @@ int olivec_save(uint32_t *pixels, int width, int height, const char* filePath);
 void make_ppm_header(FILE* fp, int width, int height){
     fprintf(fp, "P6\n");
     fprintf(fp, "%d %d %d\n",width, height, COLOR_RANGE);
+}
+
+void swaps(double *a, double *b){
+    double t = *a;
+    *a = *b;
+    *b = t;
 }
 
 void olivec_fill(uint32_t *pixels, size_t width, size_t height, uint32_t color){
@@ -44,7 +51,26 @@ void fill_rectangle(uint32_t *pixels, int width, int height, int centerX, int ce
     return;
 }
 
-
+void draw_line(uint32_t *pixels, double x1, double y1, double x2, double y2, uint32_t lineColor, int fullWidth, int fullHeight){
+    double delta_x = x2 - x1;
+    double delta_y = y2 - y1;
+    double constant, slope;
+    if(delta_x){
+        slope = delta_y/delta_x;
+        constant =  y1 - slope*x1;
+        if(x1 > x2) swaps(&x1, &x2);      
+        for(int i = (int)x1; i <= (int)x2; i++){
+            int y_new = (int)(slope*i + constant);
+            pixels[y_new*fullWidth + i] = lineColor;
+        }
+    }
+    else{
+        if(y1 > y2) swaps(&y1, &y2);
+        for(int i = y1; i < y2; i++){
+            pixels[i*fullWidth + (int)x1] = lineColor;
+        }
+    }
+}
 
 void fill_circle(uint32_t *pixels, int cx, int cy, double radius, int fullWidth, int fullHeight, uint32_t color){
     fill_rectangle(pixels, 2*radius , 2*radius , cx, cy, fullWidth, fullHeight, 0xFF000000);

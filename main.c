@@ -9,7 +9,6 @@ static uint32_t pixels[HEIGHT*WIDTH];
 
 
 int main(void){
-    
     double a = 20;
     double b = 50;
     double resolution = (b-a)/5.0;
@@ -21,13 +20,12 @@ int main(void){
         printf("%lf ", values[i]);
     }
     printf("\n");
-    olivec_fill(pixels, WIDTH, HEIGHT, 0xFFFFFF00);
+    olivec_fill(pixels, WIDTH, HEIGHT, 0xFFFF0000);
     // fill_rectangle(pixels, 800, 600, 400, 300, 800, 600, 0xFFFFFFFF);
-    fill_circular_grid(pixels, 960, 540, 400, 10, 35, WIDTH, HEIGHT, 0xFFFF2020);
+    // fill_circular_grid(pixels, 960, 540, 600, 10, 35, WIDTH, HEIGHT, 0xFFFF2020);
     // fill_checkered_pattern(pixels, 8, 8, 400, 300, 480, 480, 800, 600, 0xFFFF2020, 0xFF000000);
     // fill_circle(pixels, 400, 300, 50, WIDTH, HEIGHT, 0xFFFF2020);
+    draw_line(pixels, 10.0, 10.0, 30.0, 30.0, 0xFFFFFFFF, WIDTH, HEIGHT);
     olivec_save(pixels, WIDTH, HEIGHT, "output.ppm");
     return 0;
-
-
 }
