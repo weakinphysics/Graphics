@@ -25,7 +25,7 @@ int main(void){
     // fill_circular_grid(pixels, 960, 540, 600, 10, 35, WIDTH, HEIGHT, 0xFFFF2020);
     // fill_checkered_pattern(pixels, 8, 8, 400, 300, 480, 480, 800, 600, 0xFFFF2020, 0xFF000000);
     // fill_circle(pixels, 400, 300, 50, WIDTH, HEIGHT, 0xFFFF2020);
-    draw_line(pixels, 10.0, 10.0, 30.0, 30.0, 0xFFFFFFFF, WIDTH, HEIGHT);
+    draw_line(pixels, 1.0, 30.0, 1.0, 10.0, 0xFFFFFFFF, WIDTH, HEIGHT);
     olivec_save(pixels, WIDTH, HEIGHT, "output.ppm");
     return 0;
 }

@@ -51,17 +51,43 @@ void fill_rectangle(uint32_t *pixels, int width, int height, int centerX, int ce
     return;
 }
 
+void sortTheStuff(double *ptr){
+    if(ptr[1] > ptr[3]){
+        swaps(&(ptr[0]), &(ptr[2]));
+        swaps(&(ptr[1]), &(ptr[3]));
+    }
+    if(ptr[3] > ptr[5]){
+        swaps(&(ptr[2]), &(ptr[4]));
+        swaps(&(ptr[3]), &(ptr[5]));
+    }
+    printf("Sorted!\n");
+}
+
 void draw_line(uint32_t *pixels, double x1, double y1, double x2, double y2, uint32_t lineColor, int fullWidth, int fullHeight){
+    assert((x1 >= 0 && x1 < fullWidth) && (y1 >= 0 && y1 < fullHeight));
+    assert((x2 >= 0 && x2 < fullWidth) && (y2 >= 0 && y2 < fullHeight));
+    if(x1 > x2){
+        swaps(&x1, &x2);
+        swaps(&y2, &y1);
+    }
     double delta_x = x2 - x1;
     double delta_y = y2 - y1;
     double constant, slope;
     if(delta_x){
         slope = delta_y/delta_x;
-        constant =  y1 - slope*x1;
-        if(x1 > x2) swaps(&x1, &x2);      
+        constant =  y1 - slope*x1;      
+        int y_prev = y1;
         for(int i = (int)x1; i <= (int)x2; i++){
             int y_new = (int)(slope*i + constant);
             pixels[y_new*fullWidth + i] = lineColor;
+            while(y_prev < y_new){
+                pixels[y_prev*fullWidth + i] = lineColor;
+                y_prev++;
+            }
+            while(y_prev > y_new){
+                pixels[y_prev*fullWidth + i] = lineColor;
+                y_prev--;
+            }
         }
     }
     else{
@@ -70,6 +96,19 @@ void draw_line(uint32_t *pixels, double x1, double y1, double x2, double y2, uin
             pixels[i*fullWidth + (int)x1] = lineColor;
         }
     }
+}
+
+
+void fill_triangle(uint32_t *pixels, double *points, uint32_t color){
+    // one way of going about this is perhaps drawing borders and then filling everything within the borders. A triangle by its
+    // very nature is convex. I suppose this property of triangles makes it suitable to draw other shapes; 
+
+
+    //another way would be to draw the lines between all points of two lines of a triangle and then choose the appropriate combination of lines to 
+    //fill the space between in 
+
+    void sortTheStuff(points);
+    
 }
 
 void fill_circle(uint32_t *pixels, int cx, int cy, double radius, int fullWidth, int fullHeight, uint32_t color){
