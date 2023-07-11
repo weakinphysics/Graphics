@@ -60,6 +60,10 @@ void sortTheStuff(double *ptr){
         swaps(&(ptr[2]), &(ptr[4]));
         swaps(&(ptr[3]), &(ptr[5]));
     }
+    if(ptr[1] > ptr[3]){
+        swaps(&(ptr[0]), &(ptr[2]));
+        swaps(&(ptr[1]), &(ptr[3]));
+    }
     printf("Sorted!\n");
 }
 
@@ -98,17 +102,61 @@ void draw_line(uint32_t *pixels, double x1, double y1, double x2, double y2, uin
     }
 }
 
+bool areCollinear(double *points){
+    if(points[2] == points[0]){
+        if(points[4] == points[2]) return true;
+        return false;
+    }
+    if(points[1] == points[3]){
+        if(points[3] == points[5]) return true;
+        return false;
+    }
+    double slope1 = (points[3] - points[1])/(points[2] - points[0]);
+    double slope2 = (points[5] - points[3])/(points[4] - points[2]);
+    return (slope1 == slope2);
+}
 
-void fill_triangle(uint32_t *pixels, double *points, uint32_t color){
+void fill_triangle(uint32_t *pixels, double *points, uint32_t color, int fullWidth, int fullHeight){
     // one way of going about this is perhaps drawing borders and then filling everything within the borders. A triangle by its
     // very nature is convex. I suppose this property of triangles makes it suitable to draw other shapes; 
 
 
     //another way would be to draw the lines between all points of two lines of a triangle and then choose the appropriate combination of lines to 
     //fill the space between in 
-
-    void sortTheStuff(points);
-    
+    sortTheStuff(points);
+    if(areCollinear(points)){
+        draw_line(pixels, points[0], points[1], points[4], points[5], color, fullWidth, fullHeight);
+        return;
+    } 
+    for(int i =0; i < 6; i++) printf("%lf ", points[i]);
+    printf("\n");
+    double s2Inv = (points[4] - points[0])/(points[5] - points[1]);
+    double d2 = points[4] - points[5]*s2Inv;
+    // much like we calculate y from x using the slope-intercept form, we can calculate the opposite as well.
+    if(points[3] != points[1]){
+        double s1Inv = (points[2] - points[0])/(points[3] - points[1]);
+        double d1 = points[2] - points[3]*s1Inv;
+        printf("%lf %lf\n", d1, d2);
+        for(int y = points[1]; y < points[3]; y++){
+            int x1 = y*s1Inv + d1;
+            int x2 = y*s2Inv + d2;
+            // printf("%i %i %i\n", y, x1, x2);
+            draw_line(pixels, (double) x1, (double)y, (double)x2, (double)y, color, fullWidth, fullHeight);
+        }
+    }
+    else draw_line(pixels, points[0], points[1], points[2], points[3], color, fullWidth, fullHeight);
+    if(points[5] != points[3]){
+        double s3Inv = (points[4] - points[2])/(points[5] - points[3]);
+        double d3 = points[4] - points[5]*s3Inv;
+        printf("s3: %lf d3: %lf\n", s3Inv, d3);
+        for(int y = points[3]; y <= points[5]; y++){
+            int x2 = y*s2Inv + d2;
+            int x3 = y*s3Inv + d3;
+            // printf("%i %i %i", y, x2, x3);
+            draw_line(pixels, (double) x3, (double)y, (double)x2, (double)y, color, fullWidth, fullHeight);
+        }  
+    }
+    return;
 }
 
 void fill_circle(uint32_t *pixels, int cx, int cy, double radius, int fullWidth, int fullHeight, uint32_t color){

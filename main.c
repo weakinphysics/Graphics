@@ -12,7 +12,7 @@ int main(void){
     double a = 20;
     double b = 50;
     double resolution = (b-a)/5.0;
-    printf("%lf\n", resolution);
+    printf("%lf\n", resolution); 
     int arrLen = (b-a)/resolution;
     double values[arrLen];
     perform_linear_interpolation(a, b, resolution, values, false);
@@ -26,6 +26,10 @@ int main(void){
     // fill_checkered_pattern(pixels, 8, 8, 400, 300, 480, 480, 800, 600, 0xFFFF2020, 0xFF000000);
     // fill_circle(pixels, 400, 300, 50, WIDTH, HEIGHT, 0xFFFF2020);
     draw_line(pixels, 1.0, 30.0, 1.0, 10.0, 0xFFFFFFFF, WIDTH, HEIGHT);
+    double points[6] = {20, 20, 80, 80, 60, 200};
+    double points2[6] = {51, 501, 401, 800, 601, 601};
+    fill_triangle(pixels, points, 0xFFFFFFFF, WIDTH, HEIGHT);
+    fill_triangle(pixels, points2, 0xFF00FFFF, WIDTH, HEIGHT);
     olivec_save(pixels, WIDTH, HEIGHT, "output.ppm");
     return 0;
 }
